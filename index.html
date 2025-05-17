@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - Outlier Hackathon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #121212;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --text: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Space Background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            min-width: 300px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            background: rgba(10, 10, 20, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 2.5rem auto;
+            max-width: 800px;
+            gap: 1rem;
+            perspective: 1000px;
+            flex-wrap: wrap;
+        }
+
+        .score-box {
+            flex: 1;
+            min-width: 120px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .score-box h2 {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .score-count {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: var(--text);
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .choice-display {
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .choice-display img {
+            max-height: 80px;
+            opacity: 0;
+            transition: all 0.5s ease;
+            transform: scale(0.8) translateY(20px);
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.4));
+        }
+
+        .choice-display img.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--accent);
+        }
+
+        .controls {
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .move-prompt {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .move-counter {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .move-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            outline: none;
+        }
+
+        .move-btn img {
+            width: clamp(80px, 20vw, 120px);
+            height: clamp(80px, 20vw, 120px);
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.4));
+            transition: all 0.3s ease;
+        }
+
+        .move-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .popup-content {
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: popIn 0.6s ease forwards;
+        }
+
+        .popup-content h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 1.5rem;
+            color: var(--light);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-btn {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease both;
+        }
+
+        .bounce {
+            animation: bounce 0.6s ease;
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        #music-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .score-box {
+                padding: 1rem;
+            }
+            
+            .vs-badge {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Star Background -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Sound Elements -->
+    <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" preload="auto"></audio>
+    <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+    <audio id="loseSound" src="https://assets.mixkit.co/sfx/preview/mixkit-losing-bleeps-2026.mp3" preload="auto"></audio>
+    <audio id="tieSound" src="https://assets.mixkit.co/sfx/preview/mixkit-neutral-game-notification-955.mp3" preload="auto"></audio>
+    <audio id="bgMusic" loop src="https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-668.mp3" preload="auto"></audio>
+
+    <div class="container">
+        <button id="music-toggle">🔊</button>
+        
+        <h1 class="bounce">Rock Paper Scissors</h1>
+
+        <div class="score-container">
+            <div class="score-box player-score">
+                <h2>Player</h2>
+                <div class="score-count p-count">0</div>
+                <div class="choice-display">
+                    <img id="player-choice-img" src="" alt="Player's choice">
+                </div>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <div class="score-box computer-score">
+                <h2>Computer</h2>
+                <div class="score-count c-count">0</div>
+                <div class="choice-display">
+                    <img id="computer-choice-img" src="" alt="Computer's choice">
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="move-prompt">Choose Your Move</div>
+            <div class="move-counter" id="move-counter">Moves Left: 5</div>
+            
+            <div class="btn-container">
+                <button class="move-btn" id="btn-rock" onclick="playGame('rock')">
+                    <img src="image1.png" alt="Rock">
+                </button>
+                <button class="move-btn" id="btn-paper" onclick="playGame('paper')">
+                    <img src="image2.png" alt="Paper">
+                </button>
+                <button class="move-btn" id="btn-scissors" onclick="playGame('scissors')">
+                    <img src="image3.png" alt="Scissors">
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="popup">
+        <div class="popup-content">
+            <h2 id="popup-message"></h2>
+            <button class="popup-btn" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game elements
+        const moves = {
+            rock: "image1.png",
+            paper: "image2.png",
+            scissors: "image3.png"
+        };
+
+        // Audio elements
+        const clickSound = document.getElementById('clickSound');
+        const winSound = document.getElementById('winSound');
+        const loseSound = document.getElementById('loseSound');
+        const tieSound = document.getElementById('tieSound');
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('music-toggle');
+
+        // Game state
+        let playerScore = 0;
+        let computerScore = 0;
+        let totalMoves = 0;
+        const maxMoves = 5;
+        let isMusicOn = false;
+        let audioContextInitialized = false;
+
+        // Create star background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                const duration = Math.random() * 3 + 2;
+                star.style.setProperty('--duration', `${duration}s`);
+                
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Initialize game
+        function initGame() {
+            createStars();
+            updateMoveCounter();
+            setupEventListeners();
+            
+            // Initialize audio context on first user interaction
+            document.body.addEventListener('click', initAudioContext, { once: true });
+        }
+
+        // Initialize audio context
+        function initAudioContext() {
+            if (audioContextInitialized) return;
+            
+            // Resume audio context (required for some browsers)
+            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioContext = new AudioContext();
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        console.log('AudioContext resumed');
+                        audioContextInitialized = true;
+                    });
+                }
+            }
+            
+            // Try to play background music (muted by default)
+            bgMusic.volume = 0.5;
+            bgMusic.muted = true;
+            const playPromise = bgMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Autoplay prevented:", error);
+                });
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            musicToggle.addEventListener('click', toggleMusic);
+            
+            // Add hover sound to buttons
+            document.querySelectorAll('.move-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', () => {
+                    playSound(clickSound);
+                });
+            });
+            
+            // Unmute music on first interaction
+            document.body.addEventListener('click', () => {
+                bgMusic.muted = false;
+            }, { once: true });
+        }
+
+        // Play sound with error handling
+        function playSound(sound) {
+            if (!audioContextInitialized) return;
+            
+            sound.currentTime = 0;
+            sound.play().catch(error => {
+                console.log("Sound play prevented:", error);
+            });
+        }
+
+        // Toggle background music
+        function toggleMusic() {
+            isMusicOn = !isMusicOn;
+            if (isMusicOn) {
+                bgMusic.play().catch(error => {
+                    console.log("Music play prevented:", error);
+                });
+                musicToggle.textContent = '🔊';
+            } else {
+                bgMusic.pause();
+                musicToggle.textContent = '🔇';
+            }
+        }
+
+        // Get computer's move
+        function getComputerMove() {
+            const moveNames = Object.keys(moves);
+            return moveNames[Math.floor(Math.random() * moveNames.length)];
+        }
+
+        // Update move counter display
+        function updateMoveCounter() {
+            const movesLeft = maxMoves - totalMoves;
+            document.getElementById('move-counter').textContent = `Moves Left: ${movesLeft}`;
+            
+            if (movesLeft <= 2) {
+                document.getElementById('move-counter').classList.add('pulse');
+            } else {
+                document.getElementById('move-counter').classList.remove('pulse');
+            }
+        }
+
+        // Disable all move buttons
+        function disableButtons() {
+            document.querySelectorAll('.move-btn').forEach(btn => {
+                btn.classList.add('disabled');
+            });
+        }
+
+        // Enable all move buttons
+        function enableButtons() {
+            document.querySelectorAll('.move-btn').forEach(btn => {
+                btn.classList.remove('disabled');
+            });
+        }
+
+        // Main game function
+        function playGame(playerMove) {
+            if (totalMoves >= maxMoves) return;
+            
+            playSound(clickSound);
+            
+            const computerMove = getComputerMove();
+
+            // Update Player's choice
+            const playerImg = document.getElementById('player-choice-img');
+            playerImg.src = moves[playerMove];
+            playerImg.classList.add('visible', 'bounce');
+
+            // Update Computer's choice
+            const computerImg = document.getElementById('computer-choice-img');
+            computerImg.src = moves[computerMove];
+            computerImg.classList.add('visible', 'bounce');
+
+            // Remove bounce class after animation
+            setTimeout(() => {
+                playerImg.classList.remove('bounce');
+                computerImg.classList.remove('bounce');
+            }, 600);
+
+            // Disable buttons during round resolution
+            disableButtons();
+
+            // Resolve the round after a delay
+            setTimeout(() => {
+                let roundWinner = null;
+                
+                if (
+                    (playerMove === "rock" && computerMove === "scissors") ||
+                    (playerMove === "paper" && computerMove === "rock") ||
+                    (playerMove === "scissors" && computerMove === "paper")
+                ) {
+                    playerScore++;
+                    document.querySelector('.p-count').textContent = playerScore;
+                    document.querySelector('.player-score').classList.add('pulse');
+                    roundWinner = 'player';
+                    playSound(winSound);
+                } else if (playerMove !== computerMove) {
+                    computerScore++;
+                    document.querySelector('.c-count').textContent = computerScore;
+                    document.querySelector('.computer-score').classList.add('pulse');
+                    roundWinner = 'computer';
+                    playSound(loseSound);
+                } else {
+                    document.querySelector('.player-score').classList.add('shake');
+                    document.querySelector('.computer-score').classList.add('shake');
+                    roundWinner = 'tie';
+                    playSound(tieSound);
+                }
+
+                // Remove animations
+                setTimeout(() => {
+                    document.querySelector('.player-score').classList.remove('pulse', 'shake');
+                    document.querySelector('.computer-score').classList.remove('pulse', 'shake');
+                }, 1500);
+
+                totalMoves++;
+                updateMoveCounter();
+
+                // Check if game is over
+                if (totalMoves === maxMoves) {
+                    setTimeout(() => {
+                        declareWinner();
+                    }, 1000);
+                } else {
+                    // Reset for next round
+                    setTimeout(() => {
+                        playerImg.classList.remove('visible');
+                        computerImg.classList.remove('visible');
+                        enableButtons();
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        // Declare the game winner
+        function declareWinner() {
+            const winnerMessage = document.getElementById('popup-message');
+
+            if (playerScore > computerScore) {
+                winnerMessage.textContent = "🎉 You Win the Game! 🎉";
+                winnerMessage.style.color = "var(--success)";
+                playSound(winSound);
+            } else if (playerScore < computerScore) {
+                winnerMessage.textContent = "🤖 Computer Wins! 🤖";
+                winnerMessage.style.color = "var(--danger)";
+                playSound(loseSound);
+            } else {
+                winnerMessage.textContent = "🤝 It's a Tie! 🤝";
+                winnerMessage.style.color = "var(--warning)";
+                playSound(tieSound);
+            }
+
+            document.getElementById('popup').style.display = "flex";
+        }
+
+        // Reset the game
+        function resetGame() {
+            playSound(clickSound);
+            
+            playerScore = 0;
+            computerScore = 0;
+            totalMoves = 0;
+
+            document.querySelector('.p-count').textContent = "0";
+            document.querySelector('.c-count').textContent = "0";
+            document.getElementById('player-choice-img').classList.remove('visible');
+            document.getElementById('computer-choice-img').classList.remove('visible');
+            document.getElementById('popup').style.display = "none";
+            enableButtons();
+            updateMoveCounter();
+        }
+
+        // Initialize the game when loaded
+        window.onload = initGame;
+    </script>
+</body>
+</html>
